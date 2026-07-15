@@ -280,6 +280,21 @@ describe('Md link labels', () => {
 
     expect(lines.join('\n')).toContain('Trip details')
   })
+
+  it('preserves explicit URL labels even when label equals the target URL', () => {
+    const lines = renderPlain(
+      React.createElement(
+        Box,
+        { width: 120 },
+        React.createElement(Md, {
+          t: DEFAULT_THEME,
+          text: '[https://example.com/path](https://example.com/path)'
+        })
+      )
+    )
+
+    expect(lines.join('\n')).toContain('https://example.com/path')
+  })
 })
 
 describe('renderTable CJK width alignment', () => {

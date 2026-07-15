@@ -160,7 +160,17 @@ const pickFallbackLabel = (label: string | undefined, target: string): string | 
     return undefined
   }
 
-  return normalizeExternalUrl(trimmed) === target ? undefined : trimmed
+  // When the explicit label is itself a URL that normalizes to the target,
+  // preserve it verbatim so the user sees the URL they wrote — not a fetched
+  // page title.  Only collapse the label when it is a non-URL descriptive
+  // string that happens to match (which never happens in practice).
+  if (normalizeExternalUrl(trimmed) === target) {
+    return /^https?:\/\//i.test(trimmed) || /^[a-z0-9](?:[a-z0-9-]*\.)+[a-z]{2,}/i.test(trimmed)
+      ? trimmed
+      : undefined
+  }
+
+  return trimmed
 }
 
 interface ResolvedLinkProps {
@@ -171,7 +181,9 @@ interface ResolvedLinkProps {
 
 function ResolvedLink({ fallbackLabel, t, url }: ResolvedLinkProps) {
   const fetched = useLinkTitle(url)
-  const display = fetched || fallbackLabel || defaultLinkLabel(url)
+  // Explicit labels (fallbackLabel) take priority over fetched page titles.
+  // Only bare URLs (no fallbackLabel) benefit from title resolution.
+  const display = fallbackLabel || fetched || defaultLinkLabel(url)
 
   return (
     <Link url={url}>
